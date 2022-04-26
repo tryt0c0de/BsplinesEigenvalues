@@ -32,7 +32,8 @@ def function1(r,a,b):
     k = splinelab.augknt(knots, p)
     B = bspline.Bspline(k,p)
     # Lista de b splines
-    b_splines = np.array([B(t) for t in r]) 
+    b_splines = np.array([B(t) for t in r])
+    print(len(b_splines)) 
     b_splines = b_splines.T
     f = b_splines[a+1]*b_splines[b+1]
     return f
@@ -67,22 +68,21 @@ H = fill_matrix(function2)
 eigvals, eigvecs = eigh(H, B, eigvals_only=False)
 print(eigvals)
 print(eigvecs)
-def eigv_plot(eigvecs):
+def eigv_plot(eigvecs,r):
     k = splinelab.augknt(knots,p)
     B = bspline.Bspline(k,p)
     b_splines = np.array([B(t) for t in r]) 
-    b_splines = np.delete(b_splines,0)
-    b_splines = np.delete(b_splines,-1)
-    #b_splines = b_splines.T
-
-    print(len(b_splines.T))
+    print(b_splines)
+    print(len(b_splines))
     plotting = []
+    for a in range(len(b_splines)):
+        plot_element= b_splines[a]*eigvecs[a]
+        plt.plot()
     for c,b in enumerate(eigvecs):
-        for a in range(len(b_splines)-1):
-          plot_element = b_splines[a]*b[a]
+        for a in range(len(b_splines)):
+          plot_element = b_splines[a]*b
           plotting.append(plot_element)
         plt.plot(r,b)
     plt.savefig("Eigenvectors.pdf")
     
-eigv_plot(eigvecs)
-
+eigv_plot(eigvecs,r,x)
