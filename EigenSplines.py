@@ -19,19 +19,17 @@ def expspace(initial,final,num):    #Function to get exponentialy distributed kn
 prints = int(input("Do you want to print everything? \n (1/0) \n"))
 #Defining constants:
 R_min = 0 #int(input("Insert the minimum value for the radius: "))
-R_max = 1000 #int(input("Insert the maximum value for the radius: "))
-N = 100 #int(input("Insert the numer of knotpoints: "))
+R_max = 100 #int(input("Insert the maximum value for the radius: "))
+N = 30 #int(input("Insert the numer of knotpoints: "))
 p = 3 #int(input("Insert the order of the spline: ")) 
 Z = 1
 #knots = np.power(np.linspace(R_min,R_max,N ),1)
 knots = expspace(R_min,R_max,N)
 #knots = np.linspace(R_min,R_max,N)
-l= 0
+l= 1
 ct1 = 1/2
 ct2 = l*(l+1)/(2)
 ct3 = Z 
-
-print(splinelab.augknt(knots, p))
 
 def beauty_matrix(A):
     s = [[str(e) for e in row] for row in A]
@@ -58,10 +56,10 @@ def function2(r,a,b):
     d1_splines= np.array([d1(t) for t in r]) 
     d1_splines = d1_splines.T
     term1 = ct1*d1_splines[a+1]*d1_splines[b+1]
-    if a == 0 or b == 0 or a -1 == 0:
-        term2 = 0
-    else:
-        term2 = (ct2/r**2-ct3/r)*b_splines[a+1]*b_splines[b+1]
+    #if a == 0 or b == 0 or a -1 == 0:
+    #    term2 = 0
+    #else:
+    term2 = (ct2/r**2-ct3/r)*b_splines[a+1]*b_splines[b+1]
     return term1+term2
 
 
@@ -73,7 +71,7 @@ def fill_matrix(function):
             amax = max(a,b)+p-1
             amin = min(a,b)+p
             value = 0 
-            for j in range(amax-1, amin+p):
+            for j in range(amax+1, amin+p):
                 value += quadrature(function, k[j], k[j+1],args = (a,b),miniter = 10,maxiter =50)[0]
             #H[a,b] = round(quadrature(function,R_min,R_max,args = (a,b),miniter=min_iter,maxiter=max_iter)[0],4)
             H[a,b] = value
@@ -85,35 +83,33 @@ def fill_matrix(function):
 r = np.linspace(R_min,R_max,1000)
 #print(function(1,1,r))
 #print(quadrature(function,0,10, tol = 1e-7))
-print(splinelab.augknt(knots, p))
 start = time.process_time()
 B = fill_matrix(function1)
 runtime = time.process_time() - start
 print(f"The runtime to fill the B matrix is: {runtime} s")
-beauty_matrix(B)
 start = time.process_time()
 H = fill_matrix(function2)
-beauty_matrix(H)
 runtime = time.process_time() - start
 print(f"The runtime to fill the H matrix is: {runtime} s")
 np.save(f"Matrix_B_size={N}", B)
 np.save(f"Matrix_H_size={N}", H)
 eigvals, eigvecs = eigh(H,B, eigvals_only=False)
-print("eigvals")
 np.save(f"Eigenvalues_n={N}",eigvals)
 np.save(f"Eigenvectors_n={N}",eigvecs)
 if prints == 1:
     print("This is matrix B:\n")
-    print(beauty_matrix(B))
+    beauty_matrix(B)
     print("-------------------------------------------------------------")
     print("This is matrix H:\n")
-    print(beauty_matrix(H))
+    beauty_matrix(H)
     print("-------------------------------------------------------------")
     print("The eigenvalues are:\n")
     print(eigvals)
     print("-------------------------------------------------------------")
     print("The eigenvectors are:\n")
     print(eigvecs)
+else:
+    print("Done!")
 
 
    
