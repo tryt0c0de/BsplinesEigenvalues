@@ -19,27 +19,25 @@ def expspace(initial,final,num):    #Function to get exponentialy distributed kn
 prints = int(input("Do you want to print everything? \n (1/0) \n"))
 #Defining constants:
 R_min = 0 #int(input("Insert the minimum value for the radius: "))
-R_max = 100 #int(input("Insert the maximum value for the radius: "))
-N = 30 #int(input("Insert the numer of knotpoints: "))
+R_max = 5000 #int(input("Insert the maximum value for the radius: "))
+#N = 100 #int(input("Insert the numer of knotpoints: "))
 p = 3 #int(input("Insert the order of the spline: ")) 
 Z = 1
 #knots = np.power(np.linspace(R_min,R_max,N ),1)
-knots = expspace(R_min,R_max,N)
+
 #knots = np.linspace(R_min,R_max,N)
-l= 1
-ct1 = 1/2
-ct2 = l*(l+1)/(2)
-ct3 = Z 
+#l= 2
+
 
 def beauty_matrix(A):
-    s = [[str(e) for e in row] for row in A]
+    s = [[str(round(e,4)) for e in row] for row in A]
     lens = [max(map(len, col)) for col in zip(*s)]
     fmt = '\t'.join('{{:{}}}'.format(x) for x in lens)
     table = [fmt.format(*row) for row in s]
     print ('\n'.join(table))
 
 
-def function1(r,a,b):
+def B_ab(r,a,b):
     k = splinelab.augknt(knots, p)
     B = bspline.Bspline(k,p)
     # Lista de b splines
@@ -63,39 +61,72 @@ def function2(r,a,b):
     return term1+term2
 
 
+def H_ab(r,a,b):
+    k = splinelab.augknt(knots,p)
+    B = bspline.Bspline(k,p)
+    b_splines = np.array([B(t) for t in r]) 
+    b_splines = b_splines.T
+    d1 = B.diff(order = 1)
+    d1_splines= np.array([d1(t) for t in r]) 
+    d1_splines = d1_splines.T
+    term1 = ct1*d1_splines[a+1]*d1_splines[b+1]
+    if 0 in r:
+        return term1
+    
+    term2 = (ct2/r**2-ct3/r)*b_splines[a+1]*b_splines[b+1]
+    return term1+term2
+
+
 def fill_matrix(function):
     H = np.zeros([N,N])
     k = splinelab.augknt(knots, p)
-    for a, element in enumerate(H):
-        for b,e in enumerate(element):
-            amax = max(a,b)+p-1
-            amin = min(a,b)+p
-            value = 0 
-            for j in range(amax+1, amin+p):
-                value += quadrature(function, k[j], k[j+1],args = (a,b),miniter = 10,maxiter =50)[0]
-            #H[a,b] = round(quadrature(function,R_min,R_max,args = (a,b),miniter=min_iter,maxiter=max_iter)[0],4)
-            H[a,b] = value
+    for a in range(N):
+        for b in range(N):
+            imax = max(a,b)
+            integral = 0
+            for i in range(p+1-abs(a-b)+1):
+                #print(k[imax+i+1], k[imax+i+2])
+                integral += quadrature(function, k[imax+i+1], k[imax+i+2], args=(a,b), miniter=p, maxiter=10)[0]
+                
+            H[a,b] = integral
     return H
+
+
+
 
 #k[max(a,b)]
 #k[max(a,b)+p+1] 
-
-r = np.linspace(R_min,R_max,1000)
-#print(function(1,1,r))
-#print(quadrature(function,0,10, tol = 1e-7))
-start = time.process_time()
-B = fill_matrix(function1)
-runtime = time.process_time() - start
-print(f"The runtime to fill the B matrix is: {runtime} s")
-start = time.process_time()
-H = fill_matrix(function2)
-runtime = time.process_time() - start
-print(f"The runtime to fill the H matrix is: {runtime} s")
-np.save(f"Matrix_B_size={N}", B)
-np.save(f"Matrix_H_size={N}", H)
-eigvals, eigvecs = eigh(H,B, eigvals_only=False)
-np.save(f"Eigenvalues_n={N}",eigvals)
-np.save(f"Eigenvectors_n={N}",eigvecs)
+angmoment = [0,1,2,3,4,5,6,7,8,9,10]
+listn = [10,20,30,40,50,60,70,80,90,100]
+timelist = []
+time_BMatrix = []
+time_HMatrix = []
+for N in listn:
+    for l in angmoment:   
+        knots = expspace(R_min,R_max,N)
+        #for l in angmoment:
+        ct1 = 1/2
+        ct2 = l*(l+1)/(2)
+        ct3 = Z 
+        r = np.linspace(R_min,R_max,1000)
+        #print(function(1,1,r))
+        #print(quadrature(function,0,10, tol = 1e-7))
+        start = time.process_time()
+        B = fill_matrix(B_ab)
+        runtime = time.process_time() - start
+        print(f"The runtime to fill the B matrix is: {runtime} s")
+        start = time.process_time()
+        H = fill_matrix(H_ab)
+        runtime = time.process_time() - start
+        print(f"The runtime to fill the H matrix is: {runtime} s")
+        #np.save(f"Matrix_B_size={N}", B)
+        #np.save(f"Matrix_H_size={N}", H)
+        eigvals, eigvecs = eigh(H,B, eigvals_only=False)
+        np.save(f"Eigen\Eigenvalues_n={N}_l={l}",eigvals)
+        np.save(f"Eigen\Eigenvectors_n={N}_l={l}",eigvecs)
+timelist.append(time_BMatrix)
+timelist.append(time_HMatrix)
+np.save("Performance", np.array(timelist))
 if prints == 1:
     print("This is matrix B:\n")
     beauty_matrix(B)
