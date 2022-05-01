@@ -16,17 +16,13 @@ def expspace(initial,final,num):    #Function to get exponentialy distributed kn
     x = np.linspace(start,end,num)
     return np.exp(x)-abs(initial)-1  
 
-prints = int(input("Do you want to print everything? \n (1/0) \n"))
+prints = 0 #int(input("Do you want to print everything? \n (1/0) \n"))
 #Defining constants:
 R_min = 0 #int(input("Insert the minimum value for the radius: "))
-R_max = 5000 #int(input("Insert the maximum value for the radius: "))
+R_max = 1000 #int(input("Insert the maximum value for the radius: "))
 #N = 100 #int(input("Insert the numer of knotpoints: "))
 p = 3 #int(input("Insert the order of the spline: ")) 
 Z = 1
-#knots = np.power(np.linspace(R_min,R_max,N ),1)
-
-#knots = np.linspace(R_min,R_max,N)
-#l= 2
 
 
 def beauty_matrix(A):
@@ -96,34 +92,34 @@ def fill_matrix(function):
 
 #k[max(a,b)]
 #k[max(a,b)+p+1] 
-angmoment = [0,1,2,3,4,5,6,7,8,9,10]
-listn = [10,20,30,40,50,60,70,80,90,100]
 timelist = []
 time_BMatrix = []
 time_HMatrix = []
-for N in listn:
-    for l in angmoment:   
-        knots = expspace(R_min,R_max,N)
-        #for l in angmoment:
-        ct1 = 1/2
-        ct2 = l*(l+1)/(2)
-        ct3 = Z 
-        r = np.linspace(R_min,R_max,1000)
-        #print(function(1,1,r))
-        #print(quadrature(function,0,10, tol = 1e-7))
-        start = time.process_time()
-        B = fill_matrix(B_ab)
-        runtime = time.process_time() - start
-        print(f"The runtime to fill the B matrix is: {runtime} s")
-        start = time.process_time()
-        H = fill_matrix(H_ab)
-        runtime = time.process_time() - start
-        print(f"The runtime to fill the H matrix is: {runtime} s")
-        #np.save(f"Matrix_B_size={N}", B)
-        #np.save(f"Matrix_H_size={N}", H)
-        eigvals, eigvecs = eigh(H,B, eigvals_only=False)
-        np.save(f"Eigen\Eigenvalues_n={N}_l={l}",eigvals)
-        np.save(f"Eigen\Eigenvectors_n={N}_l={l}",eigvecs)
+l = 10
+for N in range(10,100,5):   
+    knots = expspace(R_min,R_max,N)
+    #for l in angmoment:
+    ct1 = 1/2
+    ct2 = l*(l+1)/(2)
+    ct3 = Z 
+    #r = expspace(R_min,R_max,5000)
+    #print(function(1,1,r))
+    #print(quadrature(function,0,10, tol = 1e-7))
+    start = time.process_time()
+    B = fill_matrix(B_ab)
+    runtime = time.process_time() - start
+    time_BMatrix.append(runtime)
+    print(f"The runtime to fill the B matrix is: {runtime} s")
+    start = time.process_time()
+    H = fill_matrix(H_ab)
+    runtime = time.process_time() - start
+    time_HMatrix.append(runtime)
+    print(f"The runtime to fill the H matrix is: {runtime} s")
+    #np.save(f"Matrix_B_size={N}", B)
+    #np.save(f"Matrix_H_size={N}", H)
+    #eigvals, eigvecs = eigh(H,B, eigvals_only=False)
+    #np.save(f"Eigen\Eigenvalues_n={N}_l={l}",eigvals)
+    #np.save(f"Eigen\Eigenvectors_n={N}_l={l}",eigvecs)
 timelist.append(time_BMatrix)
 timelist.append(time_HMatrix)
 np.save("Performance", np.array(timelist))
